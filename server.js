@@ -1,11 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 const path = require('path');
+require('dotenv').config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -18,24 +19,22 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'main.html'));
 });
 
-// Conexión a la base de datos MySQL
-const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'mercado_libre'
-};
-
-let db;
+// Conexión a la base de datos PostgreSQL (Neon)
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
 
 async function connectDatabase() {
     try {
-        db = await mysql.createConnection(dbConfig);
-        console.log('Conectado a la base de datos MySQL');
+        await pool.connect();
+        console.log('Conectado a la base de datos PostgreSQL (Neon)');
         await initializeDatabase();
     } catch (err) {
         console.error('Error al conectar a la base de datos:', err.message);
-        console.log('Asegúrate de tener XAMPP iniciado y la base de datos creada');
+        console.log('Asegúrate de configurado el DATABASE_URL en el archivo .env');
     }
 }
 
@@ -43,9 +42,9 @@ async function connectDatabase() {
 async function initializeDatabase() {
     try {
         // Tabla de usuarios
-        await db.execute(`
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
+                id SERIAL PRIMARY KEY,
                 username VARCHAR(255) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
                 role VARCHAR(50) DEFAULT 'user',
@@ -54,14 +53,14 @@ async function initializeDatabase() {
         `);
 
         // Tabla de productos
-        await db.execute(`
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS products (
-                id INT AUTO_INCREMENT PRIMARY KEY,
+                id SERIAL PRIMARY KEY,
                 title VARCHAR(255) NOT NULL,
                 price DECIMAL(10, 2) NOT NULL,
                 description TEXT NOT NULL,
                 image TEXT,
-                seller_id INT NOT NULL,
+                seller_id INTEGER NOT NULL,
                 seller_name VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (seller_id) REFERENCES users(id)
@@ -69,28 +68,28 @@ async function initializeDatabase() {
         `);
 
         // Tabla de tarjetas
-        await db.execute(`
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS cards (
-                id INT AUTO_INCREMENT PRIMARY KEY,
+                id SERIAL PRIMARY KEY,
                 number VARCHAR(255) NOT NULL,
                 last4 VARCHAR(4) NOT NULL,
                 name VARCHAR(255) NOT NULL,
                 expiry VARCHAR(10) NOT NULL,
                 cvv VARCHAR(3) NOT NULL,
-                user_id INT NOT NULL,
+                user_id INTEGER NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         `);
 
         // Tabla de reseñas
-        await db.execute(`
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS reviews (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                product_id INT NOT NULL,
+                id SERIAL PRIMARY KEY,
+                product_id INTEGER NOT NULL,
                 author VARCHAR(255) NOT NULL,
                 text TEXT NOT NULL,
-                rating INT NOT NULL,
+                rating INTEGER NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (product_id) REFERENCES products(id)
             )
@@ -107,7 +106,7 @@ async function initializeDatabase() {
 // Rutas de usuarios
 app.get('/api/users', async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM users');
+        const { rows } = await pool.query('SELECT * FROM users');
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -116,7 +115,7 @@ app.get('/api/users', async (req, res) => {
 
 app.get('/api/users/:id', async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM users WHERE id = ?', [req.params.id]);
+        const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
         if (rows.length === 0) {
             res.status(404).json({ error: 'Usuario no encontrado' });
             return;
@@ -135,8 +134,8 @@ app.post('/api/users', async (req, res) => {
     }
 
     try {
-        const [result] = await db.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', [username, password, role || 'user']);
-        res.json({ id: result.insertId, username, password, role: role || 'user' });
+        const result = await pool.query('INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING *', [username, password, role || 'user']);
+        res.json(result.rows[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -150,7 +149,7 @@ app.put('/api/users/:id', async (req, res) => {
     }
 
     try {
-        await db.execute('UPDATE users SET username = ?, password = ? WHERE id = ?', [username, password, req.params.id]);
+        await pool.query('UPDATE users SET username = $1, password = $2 WHERE id = $3', [username, password, req.params.id]);
         res.json({ message: 'Usuario actualizado' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -159,7 +158,7 @@ app.put('/api/users/:id', async (req, res) => {
 
 app.delete('/api/users/:id', async (req, res) => {
     try {
-        await db.execute('DELETE FROM users WHERE id = ?', [req.params.id]);
+        await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
         res.json({ message: 'Usuario eliminado' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -169,7 +168,7 @@ app.delete('/api/users/:id', async (req, res) => {
 // Rutas de productos
 app.get('/api/products', async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM products');
+        const { rows } = await pool.query('SELECT * FROM products');
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -178,7 +177,7 @@ app.get('/api/products', async (req, res) => {
 
 app.get('/api/products/:id', async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM products WHERE id = ?', [req.params.id]);
+        const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
         if (rows.length === 0) {
             res.status(404).json({ error: 'Producto no encontrado' });
             return;
@@ -197,9 +196,9 @@ app.post('/api/products', async (req, res) => {
     }
 
     try {
-        const [result] = await db.execute('INSERT INTO products (title, price, description, image, seller_id, seller_name) VALUES (?, ?, ?, ?, ?, ?)', 
+        const result = await pool.query('INSERT INTO products (title, price, description, image, seller_id, seller_name) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', 
             [title, price, description, image, sellerId, sellerName]);
-        res.json({ id: result.insertId, title, price, description, image, sellerId, sellerName });
+        res.json(result.rows[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -213,7 +212,7 @@ app.put('/api/products/:id', async (req, res) => {
     }
 
     try {
-        await db.execute('UPDATE products SET title = ?, price = ?, description = ?, image = ? WHERE id = ?', 
+        await pool.query('UPDATE products SET title = $1, price = $2, description = $3, image = $4 WHERE id = $5', 
             [title, price, description, image, req.params.id]);
         res.json({ message: 'Producto actualizado' });
     } catch (err) {
@@ -223,7 +222,7 @@ app.put('/api/products/:id', async (req, res) => {
 
 app.delete('/api/products/:id', async (req, res) => {
     try {
-        await db.execute('DELETE FROM products WHERE id = ?', [req.params.id]);
+        await pool.query('DELETE FROM products WHERE id = $1', [req.params.id]);
         res.json({ message: 'Producto eliminado' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -233,7 +232,7 @@ app.delete('/api/products/:id', async (req, res) => {
 // Rutas de tarjetas
 app.get('/api/cards', async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM cards');
+        const { rows } = await pool.query('SELECT * FROM cards');
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -248,9 +247,9 @@ app.post('/api/cards', async (req, res) => {
     }
 
     try {
-        const [result] = await db.execute('INSERT INTO cards (number, last4, name, expiry, cvv, user_id) VALUES (?, ?, ?, ?, ?, ?)', 
+        const result = await pool.query('INSERT INTO cards (number, last4, name, expiry, cvv, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', 
             [number, last4, name, expiry, cvv, userId]);
-        res.json({ id: result.insertId, number, last4, name, expiry, cvv, userId });
+        res.json(result.rows[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -258,7 +257,7 @@ app.post('/api/cards', async (req, res) => {
 
 app.delete('/api/cards/:id', async (req, res) => {
     try {
-        await db.execute('DELETE FROM cards WHERE id = ?', [req.params.id]);
+        await pool.query('DELETE FROM cards WHERE id = $1', [req.params.id]);
         res.json({ message: 'Tarjeta eliminada' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -268,7 +267,7 @@ app.delete('/api/cards/:id', async (req, res) => {
 // Rutas de reseñas
 app.get('/api/reviews', async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM reviews');
+        const { rows } = await pool.query('SELECT * FROM reviews');
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -277,7 +276,7 @@ app.get('/api/reviews', async (req, res) => {
 
 app.get('/api/reviews/product/:productId', async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM reviews WHERE product_id = ?', [req.params.productId]);
+        const { rows } = await pool.query('SELECT * FROM reviews WHERE product_id = $1', [req.params.productId]);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -292,9 +291,9 @@ app.post('/api/reviews', async (req, res) => {
     }
 
     try {
-        const [result] = await db.execute('INSERT INTO reviews (product_id, author, text, rating) VALUES (?, ?, ?, ?)', 
+        const result = await pool.query('INSERT INTO reviews (product_id, author, text, rating) VALUES ($1, $2, $3, $4) RETURNING *', 
             [productId, author, text, rating]);
-        res.json({ id: result.insertId, productId, author, text, rating });
+        res.json(result.rows[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -302,7 +301,7 @@ app.post('/api/reviews', async (req, res) => {
 
 app.delete('/api/reviews/:id', async (req, res) => {
     try {
-        await db.execute('DELETE FROM reviews WHERE id = ?', [req.params.id]);
+        await pool.query('DELETE FROM reviews WHERE id = $1', [req.params.id]);
         res.json({ message: 'Reseña eliminada' });
     } catch (err) {
         res.status(500).json({ error: err.message });
