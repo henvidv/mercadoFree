@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de Búsqueda - Mercado Libre</title>
+    <link rel="stylesheet" href="../scripts/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 style="cursor: pointer;" onclick="window.location.href='/'">🛒 Mercado Libre</h1>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Buscar productos..." onkeypress="handleSearchKeyPress(event)">
+                <button class="btn-primary" onclick="searchProducts()">🔍</button>
+            </div>
+            <div class="nav-buttons" id="navButtons">
+                <button class="btn-primary" onclick="window.location.href='/'">Iniciar Sesión</button>
+                <button class="btn-secondary" onclick="window.location.href='/'">Registrarse</button>
+                <button class="btn-secondary hidden" id="adminButton" onclick="window.location.href='admin.html'">⚙️ Admin</button>
+            </div>
+            <div class="user-info hidden" id="userInfo">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <span id="userName">Usuario</span>
+                <button class="btn-secondary" onclick="showCart()">🛒 Carrito</button>
+                <button class="btn-secondary hidden" id="adminButtonLoggedIn" onclick="window.location.href='admin.html'">⚙️ Admin</button>
+                <button class="btn-secondary" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+
+        <!-- Search Results Section -->
+        <div class="card" id="searchResultsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>🔍 Resultados de Búsqueda</h2>
+                <button class="btn-secondary" onclick="window.location.href='/'">Ver Todos los Productos</button>
+            </div>
+            <div id="searchResultsList" class="products-grid"></div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+    </div>
+
+    <script src="../scripts/api.js"></script>
+    <script src="../scripts/script.js"></script>
+    <script src="../scripts/search.js"></script>
+    <script src="../scripts/cart.js"></script>
+</body>
+</html>

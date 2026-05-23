@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación de Compra - Mercado Libre</title>
+    <link rel="stylesheet" href="../scripts/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 style="cursor: pointer;" onclick="window.location.href='/'">🛒 Mercado Libre</h1>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Buscar productos..." onkeypress="handleSearchKeyPress(event)">
+                <button class="btn-primary" onclick="searchProducts()">🔍</button>
+            </div>
+            <div class="nav-buttons" id="navButtons">
+                <button class="btn-primary" onclick="window.location.href='/'">Iniciar Sesión</button>
+                <button class="btn-secondary" onclick="window.location.href='/'">Registrarse</button>
+                <button class="btn-secondary hidden" id="adminButton" onclick="window.location.href='admin.html'">⚙️ Admin</button>
+            </div>
+            <div class="user-info hidden" id="userInfo">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <span id="userName">Usuario</span>
+                <button class="btn-secondary" onclick="window.location.href='cart.html'">🛒 Carrito</button>
+                <button class="btn-secondary hidden" id="adminButtonLoggedIn" onclick="window.location.href='admin.html'">⚙️ Admin</button>
+                <button class="btn-secondary" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+
+        <!-- Checkout Section -->
+        <div class="card" id="checkoutSection">
+            <h2>💳 Simulación de Compra</h2>
+            <div id="checkoutSummary"></div>
+            
+            <!-- Tarjeta de Débito Form -->
+            <div class="card-form" style="margin-top: 30px;">
+                <h3>💳 Datos de la Tarjeta de Débito</h3>
+                <div class="form-group">
+                    <label>Número de Tarjeta</label>
+                    <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCardNumber(this)">
+                </div>
+                <div class="form-group">
+                    <label>Nombre del Titular</label>
+                    <input type="text" id="cardName" placeholder="Como aparece en la tarjeta">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Fecha de Expiración</label>
+                        <input type="text" id="cardExpiry" placeholder="MM/AA" maxlength="5" oninput="formatCardExpiry(this)">
+                    </div>
+                    <div class="form-group">
+                        <label>CVV</label>
+                        <input type="text" id="cardCvv" placeholder="123" maxlength="3">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="saveCard"> Guardar tarjeta para futuras compras
+                    </label>
+                </div>
+            </div>
+
+            <!-- Tarjetas Guardadas -->
+            <div class="saved-cards" id="savedCardsSection" style="margin-top: 20px;">
+                <h3>💳 Tarjetas Guardadas</h3>
+                <div id="savedCardsList"></div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button class="btn-secondary" onclick="window.location.href='cart.html'">Volver al Carrito</button>
+                <button class="btn-success" onclick="confirmPurchase()">Confirmar Compra</button>
+            </div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+    </div>
+
+    <script src="../scripts/api.js"></script>
+    <script src="../scripts/script.js"></script>
+    <script src="../scripts/cart.js"></script>
+    <script src="../scripts/cards.js"></script>
+    <script>
+        // Mostrar resumen de compra al cargar la página
+        function showCheckout() {
+            if (cart.length === 0) {
+                showAlert('El carrito está vacío', 'error');
+                window.location.href = 'cart.html';
+                return;
+            }
+
+            const checkoutSummary = document.getElementById('checkoutSummary');
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            let itemsHTML = cart.map(item => `
+                <div class="checkout-item">
+                    <div>
+                        <strong>${item.title}</strong><br>
+                        <small>$${item.price.toFixed(2)} x ${item.quantity}</small>
+                    </div>
+                    <div>
+                        <strong>$${(item.price * item.quantity).toFixed(2)}</strong>
+                    </div>
+                </div>
+            `).join('');
+
+            checkoutSummary.innerHTML = `
+                <div class="checkout-info">
+                    <h3>👤 Información del Comprador</h3>
+                    <p><strong>Usuario:</strong> ${currentUser.username}</p>
+                    <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-ES')}</p>
+                </div>
+                <div class="checkout-info">
+                    <h3>🛒 Resumen de Compra</h3>
+                    ${itemsHTML}
+                    <div class="checkout-total">
+                        <strong>Total: $${total.toFixed(2)}</strong>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadInitialData();
+            updateAuthUI();
+            showCheckout();
+        });
+    </script>
+</body>
+</html>

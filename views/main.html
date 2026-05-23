@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercado Libre - Sistema de Compra y Venta</title>
+    <link rel="stylesheet" href="../scripts/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 style="cursor: pointer;" onclick="window.location.reload()">🛒 Mercado Libre</h1>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Buscar productos..." onkeypress="handleSearchKeyPress(event)">
+                <button class="btn-primary" onclick="searchProducts()">🔍</button>
+            </div>
+            <div class="nav-buttons" id="navButtons">
+                <button class="btn-primary" onclick="showLogin()">Iniciar Sesión</button>
+                <button class="btn-secondary" onclick="showRegister()">Registrarse</button>
+                <button class="btn-secondary hidden" id="adminButton" onclick="window.location.href='admin.html'">⚙️ Admin</button>
+            </div>
+            <div class="user-info hidden" id="userInfo">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <span id="userName">Usuario</span>
+                <button class="btn-secondary" onclick="window.location.href='cart.html'">🛒 Carrito</button>
+                <button class="btn-secondary hidden" id="adminButtonLoggedIn" onclick="window.location.href='admin.html'">⚙️ Admin</button>
+                <button class="btn-secondary" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+
+        <!-- Login Section -->
+        <div class="card hidden" id="loginSection">
+            <h2>Iniciar Sesión</h2>
+            <div class="form-group">
+                <label>Usuario</label>
+                <input type="text" id="loginUsername" placeholder="Ingresa tu usuario">
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña">
+            </div>
+            <button class="btn-primary" onclick="login()">Iniciar Sesión</button>
+            <button class="btn-secondary" onclick="showHome()">Cancelar</button>
+        </div>
+
+        <!-- Register Section -->
+        <div class="card hidden" id="registerSection">
+            <h2>Registrarse</h2>
+            <div class="form-group">
+                <label>Usuario</label>
+                <input type="text" id="registerUsername" placeholder="Elige un usuario">
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="registerPassword" placeholder="Elige una contraseña">
+            </div>
+            <div class="form-group">
+                <label>Confirmar Contraseña</label>
+                <input type="password" id="registerPasswordConfirm" placeholder="Confirma tu contraseña">
+            </div>
+            <button class="btn-primary" onclick="register()">Registrarse</button>
+            <button class="btn-secondary" onclick="showHome()">Cancelar</button>
+        </div>
+
+        <!-- Products Section -->
+        <div class="card" id="productsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>📦 Productos Disponibles</h2>
+                <button class="btn-primary" onclick="showAddProduct()" id="addProductBtn" style="display: none;">+ Nuevo Producto</button>
+            </div>
+            
+            <!-- Recommended Products Section -->
+            <div id="recommendedSection" style="margin-bottom: 30px;">
+                <h3>⭐ Recomendados para ti</h3>
+                <div id="recommendedList" class="products-grid"></div>
+            </div>
+            
+            <!-- All Products Section -->
+            <div id="allProductsSection">
+                <h3>Todos los productos</h3>
+                <div id="productsList" class="products-grid"></div>
+            </div>
+        </div>
+
+        <!-- Add Product Section -->
+        <div class="card hidden" id="addProductSection">
+            <h2>📝 Publicar Producto</h2>
+            <div class="form-group">
+                <label>Título</label>
+                <input type="text" id="productTitle" placeholder="Título del producto">
+            </div>
+            <div class="form-group">
+                <label>Precio ($)</label>
+                <input type="number" id="productPrice" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="productDescription" placeholder="Describe tu producto"></textarea>
+            </div>
+            <div class="form-group">
+                <label>URL de Imagen (opcional)</label>
+                <input type="text" id="productImage" placeholder="https://ejemplo.com/imagen.jpg">
+            </div>
+            <div class="form-group">
+                <label>O subir imagen desde tu computadora</label>
+                <input type="file" id="productImageFile" accept="image/*">
+            </div>
+            <button class="btn-primary" onclick="saveProduct()">Publicar</button>
+            <button class="btn-secondary" onclick="showProducts()">Cancelar</button>
+        </div>
+
+        <!-- Edit Product Section -->
+        <div class="card hidden" id="editProductSection">
+            <h2>✏️ Editar Producto</h2>
+            <input type="hidden" id="editProductId">
+            <div class="form-group">
+                <label>Título</label>
+                <input type="text" id="editProductTitle" placeholder="Título del producto">
+            </div>
+            <div class="form-group">
+                <label>Precio ($)</label>
+                <input type="number" id="editProductPrice" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="editProductDescription" placeholder="Describe tu producto"></textarea>
+            </div>
+            <div class="form-group">
+                <label>URL de Imagen (opcional)</label>
+                <input type="text" id="editProductImage" placeholder="https://ejemplo.com/imagen.jpg">
+            </div>
+            <div class="form-group">
+                <label>O subir imagen desde tu computadora</label>
+                <input type="file" id="editProductImageFile" accept="image/*">
+            </div>
+            <button class="btn-primary" onclick="updateProduct()">Actualizar</button>
+            <button class="btn-secondary" onclick="showProducts()">Cancelar</button>
+        </div>
+
+        <!-- Product Detail Section -->
+        <div class="card hidden" id="productDetailSection">
+            <button class="btn-secondary" onclick="showProducts()" style="margin-bottom: 20px;">← Volver</button>
+            <div id="productDetailContent"></div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+    </div>
+
+    <script src="../scripts/api.js"></script>
+    <script src="../scripts/script.js"></script>
+    <script src="../scripts/cart.js"></script>
+</body>
+</html>

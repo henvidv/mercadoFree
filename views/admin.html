@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Mercado Libre</title>
+    <link rel="stylesheet" href="../scripts/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 style="cursor: pointer;" onclick="window.location.href='/'">🛒 Mercado Libre - Admin</h1>
+            <div class="nav-buttons">
+                <button class="btn-primary" onclick="window.location.href='/'">Volver al Sitio</button>
+            </div>
+        </div>
+
+        <!-- Admin Navigation -->
+        <div class="admin-nav">
+            <button class="btn-primary" onclick="showSection('users')">👥 Usuarios</button>
+            <button class="btn-primary" onclick="showSection('products')">📦 Productos</button>
+            <button class="btn-primary" onclick="showSection('cards')">💳 Tarjetas</button>
+            <button class="btn-primary" onclick="showSection('reviews')">📝 Reseñas</button>
+        </div>
+
+        <!-- Users Section -->
+        <div class="card" id="usersSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>👥 Gestión de Usuarios</h2>
+                <button class="btn-success" onclick="showUserForm()">+ Nuevo Usuario</button>
+            </div>
+            <div id="usersList"></div>
+            
+            <!-- User Form -->
+            <div class="card-form hidden" id="userForm" style="margin-top: 20px;">
+                <h3 id="userFormTitle">Nuevo Usuario</h3>
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="userUsername" placeholder="Nombre de usuario">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="userPassword" placeholder="Contraseña">
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn-primary" onclick="saveUser()">Guardar</button>
+                    <button class="btn-secondary" onclick="hideUserForm()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Section -->
+        <div class="card hidden" id="productsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>📦 Gestión de Productos</h2>
+                <button class="btn-success" onclick="showProductForm()">+ Nuevo Producto</button>
+            </div>
+            <div id="productsList"></div>
+            
+            <!-- Product Form -->
+            <div class="card-form hidden" id="productForm" style="margin-top: 20px;">
+                <h3 id="productFormTitle">Nuevo Producto</h3>
+                <input type="hidden" id="editProductId">
+                <div class="form-group">
+                    <label>Título</label>
+                    <input type="text" id="adminProductTitle" placeholder="Título del producto">
+                </div>
+                <div class="form-group">
+                    <label>Precio</label>
+                    <input type="number" id="adminProductPrice" placeholder="Precio" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea id="adminProductDescription" placeholder="Descripción del producto"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>URL de Imagen</label>
+                    <input type="text" id="adminProductImage" placeholder="https://ejemplo.com/imagen.jpg">
+                </div>
+                <div class="form-group">
+                    <label>ID del Vendedor</label>
+                    <input type="number" id="adminProductSellerId" placeholder="ID del vendedor">
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn-primary" onclick="saveProductAdmin()">Guardar</button>
+                    <button class="btn-secondary" onclick="hideProductForm()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards Section -->
+        <div class="card hidden" id="cardsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>💳 Gestión de Tarjetas</h2>
+            </div>
+            <div id="cardsList"></div>
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="card hidden" id="reviewsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>📝 Gestión de Reseñas</h2>
+            </div>
+            <div id="reviewsList"></div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+    </div>
+
+    <script src="../scripts/api.js"></script>
+    <script src="../scripts/script.js"></script>
+    <script src="../scripts/admin.js"></script>
+</body>
+</html>
