@@ -7,32 +7,20 @@ Sistema de e-commerce con CRUD completo para gestión de usuarios, productos, ta
 ### Prerrequisitos
 
 1. **Cuenta en Vercel**: [Regístrate gratis](https://vercel.com/signup)
-2. **Base de datos MySQL en la nube**: Recomendado usar uno de estos servicios:
-   - [PlanetScale](https://planetscale.com/) (Gratis para desarrollo)
-   - [Railway](https://railway.app/)
-   - [Neon](https://neon.tech/)
-   - [AWS RDS](https://aws.amazon.com/rds/)
-   - [Google Cloud SQL](https://cloud.google.com/sql)
+2. **Base de datos PostgreSQL en la nube**: Recomendado usar [Neon](https://neon.tech/) (Gratis para desarrollo)
 
 ### Pasos para Desplegar
 
 #### 1. Preparar la Base de Datos
 
-Crea una base de datos MySQL en tu servicio preferido y obtén las credenciales:
-- Host (ej: `aws.connect.psdb.cloud`)
-- Usuario
-- Contraseña
-- Nombre de la base de datos
+Crea una base de datos PostgreSQL en Neon y obtén la connection string (DATABASE_URL).
 
 #### 2. Configurar Variables de Entorno en Vercel
 
-Durante el despliegue, Vercel te pedirá configurar las siguientes variables de entorno:
+Durante el despliegue, Vercel te pedirá configurar la siguiente variable de entorno:
 
 ```
-DB_HOST=tu-host-de-base-de-datos
-DB_USER=tu-usuario
-DB_PASSWORD=tu-contraseña
-DB_NAME=nombre-de-tu-base-de-datos
+DATABASE_URL=postgresql://usuario:password@ep-neon-host.us-east-2.aws.neon.tech/neondb?sslmode=require
 ```
 
 #### 3. Desplegar con Vercel CLI
@@ -103,13 +91,12 @@ npm install
 
 # Configurar variables de entorno
 cp .env.example .env
-# Edita .env con tus credenciales de base de datos local
+# Edita .env con tu DATABASE_URL de Neon
 ```
 
 ### Ejecutar en Local
 
 ```bash
-# Asegúrate de tener MySQL corriendo (XAMPP, WAMP, o MySQL directo)
 npm start
 ```
 
@@ -159,7 +146,7 @@ El sistema crea automáticamente las siguientes tablas:
 
 ## 📝 Notas Importantes
 
-1. **Base de Datos**: Para producción, usa una base de datos MySQL en la nube. No uses bases de datos locales para despliegue en Vercel.
+1. **Base de Datos**: El proyecto usa PostgreSQL (Neon) para producción. No uses bases de datos locales para despliegue en Vercel.
 
 2. **Connection Pooling**: La configuración usa connection pooling para optimizar el rendimiento en entorno serverless.
 
